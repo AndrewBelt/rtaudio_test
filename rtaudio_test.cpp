@@ -76,6 +76,8 @@ int main() {
 		RtAudio::StreamOptions options;
 
 		try {
+			if (outParameters.nChannels == 0 && inParameters.nChannels == 0)
+				continue;
 			stream.openStream(
 				outParameters.nChannels > 0 ? &outParameters : NULL,
 				inParameters.nChannels > 0 ? &inParameters : NULL,
