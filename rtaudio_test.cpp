@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <assert.h>
 #include <math.h>
 #include <unistd.h>
@@ -8,6 +9,17 @@
 int mini(int a, int b) {
 	return a < b ? a : b;
 }
+
+void debug(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	fprintf(stderr, "[debug] ");
+	vfprintf(stderr, format, args);
+	fprintf(stderr, "\n");
+	fflush(stderr);
+	va_end(args);
+}
+
 
 static float phase = 0.0;
 
@@ -43,19 +55,20 @@ int main() {
 	StreamData streamData;
 
 	int deviceCount = stream.getDeviceCount();
-	fprintf(stderr, "deviceCount: %d\n", deviceCount);
+	debug("deviceCount: %d", deviceCount);
 
 	for (int deviceId = 0; deviceId < deviceCount; deviceId++) {
-		RtAudio::DeviceInfo info = stream.getDeviceInfo(deviceId);
-		fprintf(stderr, "%d: probed: %d, name: %s output: %d, input: %d, duplex: %d\n", deviceId, info.probed, info.name.c_str(), info.outputChannels, info.inputChannels, info.duplexChannels);
+		RtAudio::DeviceInfo deviceInfo = stream.getDeviceInfo(deviceId);
+		debug("Stream %d: probed: %d, name: %s outputs: %d, inputs: %d, duplex: %d", deviceId, deviceInfo.probed, deviceInfo.name.c_str(), deviceInfo.outputChannels, deviceInfo.inputChannels, deviceInfo.duplexChannels);
+		fflush(stderr);
 
 		RtAudio::StreamParameters inParameters;
 		inParameters.deviceId = deviceId;
-		inParameters.nChannels = mini(info.inputChannels, 8);
+		inParameters.nChannels = mini(deviceInfo.inputChannels, 8);
 
 		RtAudio::StreamParameters outParameters;
 		outParameters.deviceId = deviceId;
-		outParameters.nChannels = mini(info.outputChannels, 8);
+		outParameters.nChannels = mini(deviceInfo.outputChannels, 8);
 
 		unsigned int sampleRate = 44100;
 		unsigned int bufferFrames = 256;
@@ -69,22 +82,22 @@ int main() {
 				RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &callback, &streamData, &options, NULL);
 		}
 		catch ( RtAudioError& e ) {
-			fprintf(stderr, "%s\n", e.what());
+			debug("%s\n", e.what());
 		}
 
 		streamData.inChannels = inParameters.nChannels;
 		streamData.outChannels = outParameters.nChannels;
 		streamData.sampleRate = stream.getStreamSampleRate();
 
+		debug("\toutputs: %d, inputs: %d, blockSize: %d, sampleRate: %d", deviceId, streamData.outChannels, streamData.inChannels, bufferFrames, streamData.sampleRate);
+
 		try {
-			fprintf(stderr, "Starting stream %d\n", deviceId);
 			stream.startStream();
-			sleep(3);
-			fprintf(stderr, "Stopping stream %d\n", deviceId);
+			sleep(5);
 			stream.closeStream();
 		}
 		catch ( RtAudioError& e ) {
-			fprintf(stderr, "%s\n", e.what());
+			debug("%s", e.what());
 		}
 	}
 }

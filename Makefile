@@ -18,7 +18,7 @@ ifeq ($(ARCH), mac)
 	DYLD_FALLBACK_LIBRARY_PATH=../dep/lib ./$<
 endif
 ifeq ($(ARCH), win)
-	env PATH=../dep/bin ./$<
+	env PATH=../dep/bin:/mingw64/bin ./$<
 endif
 
 
