@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <math.h>
 #include <unistd.h>
-#include "rtaudio/RtAudio.h"
+#include "RtAudio.h"
 
 
 int mini(int a, int b) {
